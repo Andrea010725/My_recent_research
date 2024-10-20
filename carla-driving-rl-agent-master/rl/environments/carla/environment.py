@@ -23,6 +23,8 @@ from rl.environments.carla.tools import misc, utils
 from rl.environments.carla.tools.utils import WAYPOINT_DICT
 from rl.environments.carla.tools.synchronous_mode import CARLASyncContext
 
+from codebook.chatgpt import query_vector
+
 
 class CARLAEvent(enum.Enum):
     """Available events (callbacks) related to CARLAEnvironment"""
@@ -333,8 +335,11 @@ class CARLABaseEnvironment(gym.Env):
         self.clock.tick()
 
         sensors_data = self.world_step(actions)
-        #  修改reward 函数的传入  注意要传入embeddings
-        reward = self.reward(actions,embeddings=embeddings)
+
+        # 获取 reward 的权重 不需要经过embedder 只用vector
+        # str 待修改 
+        vector = query_vector("我赶时间，想要开的快一些，减少舒适性的考虑")
+        reward = self.reward(actions,vector = vector)
         terminal = self.terminal_condition()
         next_state = self.get_observation(sensors_data)
 

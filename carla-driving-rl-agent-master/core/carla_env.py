@@ -203,13 +203,13 @@ class CARLAEnv(ThreeCameraCARLAEnvironment):   # 观测空间定义
             
     # 修改后的reward 函数 
 
-    def reward(self, *args, respect_speed_limit=False, embeddings=None, **kwargs) -> float:
+    def reward(self, *args, respect_speed_limit=False, vector=None, **kwargs) -> float:
         """Reward function divided into safety, efficiency, and comfort.
-        embeddings 用于调整三个部分的权重."""
+        vector 用于调整三个部分的权重."""
         
-        # 确保 embeddings 是有效的（长度为3，对应三个奖励部分）
-        if embeddings is None or len(embeddings) != 3:
-            embeddings = [0.5, 0.3, 0.2]  # 如果没有提供，则使用默认权重 1.0
+        # 确保 vector 是有效的（长度为3，对应三个奖励部分）
+        if vector is None or len(vector) != 3:
+            vector = [0.5, 0.3, 0.2]  # 如果没有提供，则使用默认权重
         
         # 1. 安全（Safety）部分
         safety_reward = 0.0
@@ -233,13 +233,11 @@ class CARLAEnv(ThreeCameraCARLAEnvironment):   # 观测空间定义
                 comfort_reward += (speed_limit - speed)  # 超速惩罚
         
         # 加权计算总奖励
-        total_reward = (embeddings[0] * safety_reward) + \
-                    (embeddings[1] * efficiency_reward) + \
-                    (embeddings[2] * comfort_reward)
+        total_reward = (vector[0] * safety_reward) + \
+                    (vector[1] * efficiency_reward) + \
+                    (vector[2] * comfort_reward)
         
         return total_reward
-
-
 
     def reset(self) -> dict:
         self.next_waypoint = None
