@@ -179,27 +179,67 @@ class CARLAEnv(ThreeCameraCARLAEnvironment):   # 观测空间定义
             steer = self.range_controls['steer']
             self.control.steer = utils.clip(self.control.steer, min_value=steer[0], max_value=steer[1])
 
-    def reward(self, *args, respect_speed_limit=False, **kwargs) -> float:
-        """Reward function"""
-        speed = carla_utils.speed(self.vehicle)
-        dw = self.route.distance_to_next_waypoint()
+    # def reward(self, *args, respect_speed_limit=False, **kwargs) -> float:        # reward的具体定义    待修改
+    #     """Reward function"""
+    #     speed = carla_utils.speed(self.vehicle)
+    #     dw = self.route.distance_to_next_waypoint()
 
+    #     if self.collision_penalty > 0.0:
+    #         self.should_terminate = True
+    #         return -self.collision_penalty
+
+    #     if respect_speed_limit:
+    #         speed_limit = self.vehicle.get_speed_limit()
+
+    #         if speed > speed_limit:
+    #             return speed_limit - speed
+
+    #     r = speed * self.similarity
+
+    #     if r != 0.0:
+    #         r /= max(1.0, (dw / 2.0)**2)
+
+    #     return r
+            
+    # 修改后的reward 函数 
+
+    def reward(self, *args, respect_speed_limit=False, embeddings=None, **kwargs) -> float:
+        """Reward function divided into safety, efficiency, and comfort.
+        embeddings 用于调整三个部分的权重."""
+        
+        # 确保 embeddings 是有效的（长度为3，对应三个奖励部分）
+        if embeddings is None or len(embeddings) != 3:
+            embeddings = [0.5, 0.3, 0.2]  # 如果没有提供，则使用默认权重 1.0
+        
+        # 1. 安全（Safety）部分
+        safety_reward = 0.0
         if self.collision_penalty > 0.0:
             self.should_terminate = True
-            return -self.collision_penalty
-
+            safety_reward -= self.collision_penalty  # 发生碰撞则给予惩罚
+        
+        # 2. 效率（Efficiency）部分
+        efficiency_reward = 0.0
+        speed = carla_utils.speed(self.vehicle)  # 获取车辆速度
+        dw = self.route.distance_to_next_waypoint()  # 获取车辆到下一个路标的距离
+        efficiency_reward = speed * self.similarity  # 基础速度奖励，速度越快奖励越高
+        if efficiency_reward != 0.0:
+            efficiency_reward /= max(1.0, (dw / 2.0)**2)  # 距离修正，距离越远奖励越小
+        
+        # 3. 舒适（Comfort）部分
+        comfort_reward = 0.0
         if respect_speed_limit:
-            speed_limit = self.vehicle.get_speed_limit()
-
+            speed_limit = self.vehicle.get_speed_limit()  # 获取当前道路的速度限制
             if speed > speed_limit:
-                return speed_limit - speed
+                comfort_reward += (speed_limit - speed)  # 超速惩罚
+        
+        # 加权计算总奖励
+        total_reward = (embeddings[0] * safety_reward) + \
+                    (embeddings[1] * efficiency_reward) + \
+                    (embeddings[2] * comfort_reward)
+        
+        return total_reward
 
-        r = speed * self.similarity
 
-        if r != 0.0:
-            r /= max(1.0, (dw / 2.0)**2)
-
-        return r
 
     def reset(self) -> dict:
         self.next_waypoint = None

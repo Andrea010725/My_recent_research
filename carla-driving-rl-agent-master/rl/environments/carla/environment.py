@@ -333,8 +333,8 @@ class CARLABaseEnvironment(gym.Env):
         self.clock.tick()
 
         sensors_data = self.world_step(actions)
-
-        reward = self.reward(actions)
+        #  修改reward 函数的传入  注意要传入embeddings
+        reward = self.reward(actions,embeddings=embeddings)
         terminal = self.terminal_condition()
         next_state = self.get_observation(sensors_data)
 
