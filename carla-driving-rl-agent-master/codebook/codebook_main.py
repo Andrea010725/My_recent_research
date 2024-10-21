@@ -29,7 +29,7 @@ from allenact.embodiedai.models.basic_models import RNNStateEncoder
 from allenact.embodiedai.models.fusion_models import Fusion
 from allenact.utils.model_utils import FeatureEmbedding
 from allenact.utils.system import get_logger
-from codebook.chatgpt import query_vector,query_vector_x
+from codebook.automatic_gpt import monitor_script
 
 
 import sys
@@ -79,8 +79,8 @@ class Codebook():
        
         # codebook
         # self.codebook_type = cfg.model.codebook.type
-        # self.codebook_size = cfg.model.codebook.size
-        # self.code_dim = cfg.model.codebook.code_dim
+        self.codebook_size = 30 # 暂定  待修改
+        self.code_dim = 30
         self.codebook.embeds = "joint_embeds"   # 可修改   "beliefs"
 
         # 目前只考虑 codebook 是随机初始化的 
@@ -142,8 +142,8 @@ class CodebookEmbedder(nn.Module):
         # x shape: W x B x num_objectives
 
         # 传入的 str 待修改
-        x = query_vector_x("我赶时间，想要开的快一些，减少舒适性的考虑")
-
+        print("!!!!!!!!!!!!")
+        x = monitor_script()
         x_shape = x.shape
         x = x.view(-1, x_shape[-1]).type(torch.float32)
         # 通过编码器将输入的奖励权重转换为概率分布

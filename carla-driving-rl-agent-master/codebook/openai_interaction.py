@@ -68,6 +68,10 @@ def get_response(message: str):
     explanation = analyze_vector(vector, message)
     return vector, explanation
 
+def query_vector_x(vector):
+    # vector = [float(val) for val in vector]  # 转换为浮点数数组
+    return vector
+
 # if __name__ == "__main__":
 #     message = "我赶时间，想要开的快一些，减少舒适性的考虑"
 #     vector, explanation = get_response(message)
@@ -78,8 +82,9 @@ def get_response(message: str):
 if __name__ == "__main__":
     message = "我赶时间，想要开的快一些，减少舒适性的考虑"
     vector, explanation = get_response(message)
-
     # 打印生成的向量
+    # print(vector)
+    vector = query_vector_x(vector)
     print(vector)
 
     # uvicorn.run(app, host="127.0.0.1", port=8004, reload=False)
